@@ -1,0 +1,39 @@
+Huffman coding assigns a variable length binary code to every symbol in an
+alphabet, in such a way that no code is a prefix of another. Because no code is a
+prefix of another, a stream of concatenated codes can be read back without any
+separators between them: the decoder walks the tree one bit at a time, and the
+moment it lands on a leaf it has read exactly one symbol.
+
+The construction is a greedy one. Every distinct symbol in the input starts as a
+leaf carrying its frequency. The two lowest frequency nodes are removed and joined
+under a new parent whose frequency is the sum of theirs, and that parent goes back
+into the pool. Repeating until a single node remains produces a tree in which the
+rarest symbols sit deepest and therefore receive the longest codes, and the most
+common symbols sit close to the root and receive the shortest.
+
+The reason this works is that the cost of a code is the sum over symbols of the
+frequency of the symbol multiplied by the depth of its leaf. Joining the two
+rarest symbols first is safe because those two symbols must, in some optimal tree,
+be siblings at the greatest depth. Any tree that does not place them there can be
+rearranged into one that does without increasing the total cost, so the greedy
+choice never rules out an optimal answer.
+
+A min heap is the natural structure for the pool. Extracting the minimum twice and
+inserting the merged node once costs a logarithmic number of comparisons, and the
+loop runs once per merge, so a alphabet of n symbols is processed in n log n time
+overall. Building the initial heap is linear, which does not change the bound.
+
+What Huffman coding cannot do is beat the entropy of the source by more than a
+fraction of a bit per symbol. English prose carries roughly four and a half bits
+of information per character, against the eight bits a plain byte spends, so a
+compression ratio near six tenths is about what the method should achieve on
+ordinary text. Files that are already compressed, or that are close to random,
+have entropy near eight bits per character and will not shrink at all. A short
+file may even grow, because the frequency table has to be stored alongside the
+encoded body and that table has a fixed cost that the saved bits cannot repay.
+
+This last point is worth stating plainly, because it is the most common surprise
+for anyone meeting the method for the first time. Compression is not a property of
+an algorithm alone. It is a property of the match between an algorithm and the
+statistics of the data it is given, and a method that is excellent on one kind of
+input will be useless or harmful on another.

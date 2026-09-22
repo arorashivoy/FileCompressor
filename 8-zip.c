@@ -482,7 +482,7 @@ void tableWrite(FILE* fTable, ele* arr[], long bitsWritten) {
     fprintf(fTable, "%ld ", bitsWritten);
 
     for (int i = 0; i < 256 && arr[i]->val != '\0'; i++) {
-        fprintf(fTable, "%c %ld ", arr[i]->val, arr[i]->freq);
+        fprintf(fTable, "%d %ld ", (unsigned char) arr[i]->val, arr[i]->freq);
     }
     fprintf(fTable, "\n");
 }
@@ -596,21 +596,20 @@ ele* readTable(FILE* fTable) {
         arr[i] = empty;
     }
 
-    // Getting frequency of the file
-    while (feof(fTable) == 0) {
-        char a = '\0';
-        int freq;
-        fscanf(fTable, "%c", &a);
+    // Getting frequency of the file. Symbols are stored as byte values, not as
+    // literal characters, because space and newline are themselves symbols.
+    while (1) {
+        int code, freq;
 
-        // managing whitespaces
-        if (a == ' ')           continue;
-        else if (a == '\n')     break;
-        else if (a == '\0')     continue;
+        if (fscanf(fTable, "%d %d", &code, &freq) != 2)     break;
 
-        fscanf(fTable, "%d", &freq);
-
-        arr[arrIndex] = createElement(a, freq);
+        arr[arrIndex] = createElement((char) code, freq);
         arrIndex += 1;
+
+        int c = fgetc(fTable);
+        while (c == ' ')        c = fgetc(fTable);
+        if (c == '\n' || c == EOF)      break;
+        ungetc(c, fTable);
     }
 
     // Huffman coding
